@@ -1,0 +1,73 @@
+* ob-typescript
+
+** Install
+#+BEGIN_SRC emacs-lisp
+(quelpa '(ob-typescript :repo "lurdan/ob-typescript" :fetcher github))
+#+END_SRC
+
+** Confugre
+#+BEGIN_SRC emacs-lisp
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((typescript . t)
+   ))
+#+END_SRC
+
+** Examples
+
+*** Transpile
+
+#+Begin_SRC typescript
+module Greeting {
+    export class Hello {
+        constructor(private text : string) {
+        }
+        say() :void{
+            console.log(this.text);
+        }
+    }
+}
+
+var hello : Greeting.Hello = new Greeting.Hello("Hello, World!");
+hello.say();
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC js
+var Greeting;
+(function (Greeting) {
+    var Hello = (function () {
+        function Hello(text) {
+            this.text = text;
+        }
+        Hello.prototype.say = function () {
+            console.log(this.text);
+        };
+        return Hello;
+    })();
+    Greeting.Hello = Hello;
+})(Greeting || (Greeting = {}));
+var hello = new Greeting.Hello("Hello, World!");
+hello.say();
+#+END_SRC
+
+
+*** Execute with node.js
+
+#+BEGIN_SRC typescript :exec :results pp
+module Greeting {
+    export class Hello {
+        constructor(private text : string) {
+        }
+        say() :void{
+            console.log(this.text);
+        }
+    }
+}
+
+var hello : Greeting.Hello = new Greeting.Hello("Hello, World!");
+hello.say();
+#+END_SRC
+
+#+RESULTS:
+: Hello, World!

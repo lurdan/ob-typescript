@@ -4,8 +4,9 @@
 
 ;; Author: KURASHIKI Satoru
 ;; Keywords: literate programming, reproducible research, typescript
-;; Homepage: http://orgmode.org
+;; Homepage: https://github.com/lurdan/ob-typescript
 ;; Version: 0.1
+;; Package-Requires: ((emacs "24") (org "8.0"))
 
 ;;; License:
 
@@ -25,8 +26,10 @@
 ;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
+;; Exec typescript in org-babel code blocks.
 
 ;;; Requirements:
+;; You need to install node.js and typescript to use this extension.
 
 ;;; Code:
 (require 'ob)
@@ -39,7 +42,7 @@
 (add-to-list 'org-babel-tangle-lang-exts '("typescript" . "ts"))
 
 ;; optionally declare default header arguments for this language
-(defvar org-babel-default-header-args:typescript '((:cmdline . "--noImplicitAny") (:results . "raw")))
+(defvar org-babel-default-header-args:typescript '((:cmdline . "--noImplicitAny")))
 
 (defun org-babel-typescript-var-to-typescript (var)
   "Convert an elisp var into a string of typescript source code
@@ -51,7 +54,6 @@ specifying a var of the same value."
 ;; be called by the `org-babel-execute:typescript' function below.
 (defun org-babel-expand-body:typescript (body params &optional processed-params)
   "Expand BODY according to PARAMS, return the expanded body."
-  ;;(require 'inf-typescript)
   (let ((vars (nth 1 (or processed-params (org-babel-process-params params)))))
     (concat
      (mapconcat ;; define any variables
@@ -67,9 +69,9 @@ called by `org-babel-execute-src-block'"
          (tmp-out-file (org-babel-temp-file "ts-src-" ".js"))
          (cmdline (cdr (assoc :cmdline params)))
          (cmdline (if cmdline (concat " " cmdline) ""))
-         (jsexec (if (assoc :exec params) (concat " ; node "
-                                                  (org-babel-process-file-name tmp-out-file))
-                   "")))
+         (jsexec (if (assoc :wrap params) ""
+                   (concat " ; node " (org-babel-process-file-name tmp-out-file))
+                   )))
     (with-temp-file tmp-src-file (insert body))
     (let ((results (org-babel-eval (format "tsc %s -out %s %s %s"
                                            cmdline
@@ -80,14 +82,8 @@ called by `org-babel-execute-src-block'"
           (jstrans (with-temp-buffer
                      (insert-file-contents tmp-out-file)
                      (buffer-substring-no-properties (point-min) (point-max))
-                     ))
-          )
-      (message "DEBUG: jstrans: %s" jstrans)
-      (if (eq jsexec "")
-        (progn (message "DEBUG: no-jsexec: %s" jstrans)
-               (format "#+BEGIN_SRC js\n%s\n#+END_SRC" jstrans))
-          (progn (message "DEBUG: jsexec: %s" results) results)
-        )
+                     )))
+      (if (eq jsexec "") jstrans results)
       )))
 
 (provide 'ob-typescript)

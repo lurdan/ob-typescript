@@ -1,11 +1,26 @@
 * ob-typescript
+[[http://melpa.org/#/ob-typescript][http://melpa.org/packages/ob-typescript-badge.svg]]
+
+This org-mode babel extension enables you to execute typescript code blocks.
 
 ** Install
+
+*** Requirement
+You need to install node.js and typescript to use this extension.
+
+*** MELPA
+With setting up [[http://melpa.org][MELPA]], use =M-x package-install ob-typescript= .
+
+*** Manually
+Add ob-typescript.el to your =load-path= and require.
+
 #+BEGIN_SRC emacs-lisp
-(quelpa '(ob-typescript :repo "lurdan/ob-typescript" :fetcher github))
+(add-to-list 'load-path "/path/to/ob-typescript.el")
+(require 'ob-typescript)
 #+END_SRC
 
-** Confugre
+** Configure
+
 #+BEGIN_SRC emacs-lisp
 (org-babel-do-load-languages
  'org-babel-load-languages
@@ -15,9 +30,31 @@
 
 ** Examples
 
+*** Execute with node.js
+
+#+BEGIN_SRC typescript
+module Greeting {
+    export class Hello {
+        constructor(private text : string) {
+        }
+        say() :void{
+            console.log(this.text);
+        }
+    }
+}
+
+var hello : Greeting.Hello = new Greeting.Hello("Hello, World!");
+hello.say();
+#+END_src
+
+#+RESULTS:
+: Hello, World!
+
 *** Transpile
 
-#+Begin_SRC typescript
+You can see transpile results by specifying ":wrap SRC js" header argument.
+
+#+Begin_SRC typescript :wrap SRC js
 module Greeting {
     export class Hello {
         constructor(private text : string) {
@@ -50,24 +87,3 @@ var Greeting;
 var hello = new Greeting.Hello("Hello, World!");
 hello.say();
 #+END_SRC
-
-
-*** Execute with node.js
-
-#+BEGIN_SRC typescript :exec :results pp
-module Greeting {
-    export class Hello {
-        constructor(private text : string) {
-        }
-        say() :void{
-            console.log(this.text);
-        }
-    }
-}
-
-var hello : Greeting.Hello = new Greeting.Hello("Hello, World!");
-hello.say();
-#+END_SRC
-
-#+RESULTS:
-: Hello, World!

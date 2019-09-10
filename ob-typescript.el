@@ -44,23 +44,18 @@
 ;; optionally declare default header arguments for this language
 (defvar org-babel-default-header-args:typescript '((:cmdline . "--noImplicitAny")))
 
+(defun org-babel-variable-assignments:typescript (params)
+  "Return list of typescript statements assigning the block's variables."
+  (mapcar (lambda (pair) (format "let %s=%s;"
+                                 (car pair) (org-babel-typescript-var-to-typescript (cdr pair))))
+          (org-babel--get-vars params)))
+
 (defun org-babel-typescript-var-to-typescript (var)
   "Convert an elisp var into a string of typescript source code
 specifying a var of the same value."
-  (format "%S" var))
-
-;; This function expands the body of a source code block by doing
-;; things like prepending argument definitions to the body, it should
-;; be called by the `org-babel-execute:typescript' function below.
-(defun org-babel-expand-body:typescript (body params &optional processed-params)
-  "Expand BODY according to PARAMS, return the expanded body."
-  (let ((vars (nth 1 (or processed-params (org-babel-process-params params)))))
-    (concat
-     (mapconcat ;; define any variables
-      (lambda (pair)
-        (format "%s=%S"
-                (car pair) (org-babel-typescript-var-to-typescript (cdr pair))))
-      vars "\n") "\n" body "\n")))
+  (if (listp var)
+      (concat "[" (mapconcat #'org-babel-typescript-var-to-typescript var ", ") "]")
+    (replace-regexp-in-string "\n" "\\\\n" (format "%S" var))))
 
 (defun org-babel-execute:typescript (body params)
   "Execute a block of Typescript code with org-babel.  This function is
@@ -72,7 +67,8 @@ called by `org-babel-execute-src-block'"
          (jsexec (if (assoc :wrap params) ""
                    (concat " ; node " (org-babel-process-file-name tmp-out-file))
                    )))
-    (with-temp-file tmp-src-file (insert body))
+    (with-temp-file tmp-src-file (insert (org-babel-expand-body:generic
+                                          body params (org-babel-variable-assignments:typescript params))))
     (let ((results (org-babel-eval (format "tsc %s -out %s %s %s"
                                            cmdline
                                            (org-babel-process-file-name tmp-out-file)

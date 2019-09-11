@@ -32,13 +32,13 @@ Add ob-typescript.el to your =load-path= and require.
 
 *** Execute with node.js
 
-#+BEGIN_SRC typescript
+#+BEGIN_SRC typescript :results output :var x="foo" :var y='("bar" "baz")
 module Greeting {
     export class Hello {
         constructor(private text : string) {
         }
         say() :void{
-            console.log(this.text);
+            console.log(`${this.text}, ${x}, ${y}`);
         }
     }
 }
@@ -48,13 +48,13 @@ hello.say();
 #+END_src
 
 #+RESULTS:
-: Hello, World!
+: Hello, World!, foo, bar,baz
 
 *** Transpile
 
-You can see transpile results by specifying ":wrap SRC js" header argument.
+You can see transpile results by specifying ":wrap src js" header argument.
 
-#+Begin_SRC typescript :wrap SRC js
+#+BEGIN_SRC typescript :wrap "src js :results output"
 module Greeting {
     export class Hello {
         constructor(private text : string) {
@@ -70,10 +70,10 @@ hello.say();
 #+END_SRC
 
 #+RESULTS:
-#+BEGIN_SRC js
+#+begin_src js :results output
 var Greeting;
 (function (Greeting) {
-    var Hello = (function () {
+    var Hello = /** @class */ (function () {
         function Hello(text) {
             this.text = text;
         }
@@ -81,9 +81,9 @@ var Greeting;
             console.log(this.text);
         };
         return Hello;
-    })();
+    }());
     Greeting.Hello = Hello;
 })(Greeting || (Greeting = {}));
 var hello = new Greeting.Hello("Hello, World!");
 hello.say();
-#+END_SRC
+#+end_src

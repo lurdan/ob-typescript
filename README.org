@@ -28,6 +28,12 @@ Add ob-typescript.el to your =load-path= and require.
    ))
 #+END_SRC
 
+The default command used to run the typescript compiler is defined in [[help:org-babel-command:typescript][org-babel-command:typescript]]. You may configure this to do things like use a sandboxed version of the typescript compiler without having to install it globally
+
+#+begin_src emacs-lisp
+  (setq org-babel-command:typescript "npx -p typescript -- tsc")
+#+end_src
+
 ** Examples
 
 *** Execute with node.js

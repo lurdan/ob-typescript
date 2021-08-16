@@ -57,6 +57,9 @@ specifying a var of the same value."
       (concat "[" (mapconcat #'org-babel-typescript-var-to-typescript var ", ") "]")
     (replace-regexp-in-string "\n" "\\\\n" (format "%S" var))))
 
+(defvar org-babel-command:typescript "tsc"
+  "Command run by ob-typescript to launch tsc compiler")
+
 (defun org-babel-execute:typescript (body params)
   "Execute a block of Typescript code with org-babel.  This function is
 called by `org-babel-execute-src-block'"
@@ -69,7 +72,8 @@ called by `org-babel-execute-src-block'"
                    )))
     (with-temp-file tmp-src-file (insert (org-babel-expand-body:generic
                                           body params (org-babel-variable-assignments:typescript params))))
-    (let ((results (org-babel-eval (format "tsc %s -out %s %s %s"
+    (let ((results (org-babel-eval (format "%s %s -out %s %s %s"
+                                           org-babel-command:typescript
                                            cmdline
                                            (org-babel-process-file-name tmp-out-file)
                                            (org-babel-process-file-name tmp-src-file)

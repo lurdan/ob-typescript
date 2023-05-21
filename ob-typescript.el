@@ -69,7 +69,7 @@ called by `org-babel-execute-src-block'"
                    )))
     (with-temp-file tmp-src-file (insert (org-babel-expand-body:generic
                                           body params (org-babel-variable-assignments:typescript params))))
-    (let ((results (org-babel-eval (format "tsc %s -out %s %s %s"
+    (let ((results (org-babel-eval (format "tsc %s -outFile %s %s %s"
                                            cmdline
                                            (org-babel-process-file-name tmp-out-file)
                                            (org-babel-process-file-name tmp-src-file)

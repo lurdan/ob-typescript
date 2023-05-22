@@ -57,20 +57,29 @@ specifying a var of the same value."
       (concat "[" (mapconcat #'org-babel-typescript-var-to-typescript var ", ") "]")
     (replace-regexp-in-string "\n" "\\\\n" (format "%S" var))))
 
+(defun get-tsc-version ()
+  "Get typescript compiler version"
+  (let ((ver-str (org-babel-eval "tsc --version" "")))
+    (string-match "[[:digit:]]+" ver-str)
+    (string-to-number (match-string 0 ver-str))))
+
 (defun org-babel-execute:typescript (body params)
-  "Execute a block of Typescript code with org-babel.  This function is
+  "Execute a block of Typescript code with org-babel. This function is
 called by `org-babel-execute-src-block'"
   (let* ((tmp-src-file (org-babel-temp-file "ts-src-" ".ts"))
          (tmp-out-file (org-babel-temp-file "ts-src-" ".js"))
          (cmdline (cdr (assoc :cmdline params)))
          (cmdline (if cmdline (concat " " cmdline) ""))
+         ;; since tsc v5, -out parameter is deprecated.
+         (out-file-param-name (if (>= (get-tsc-version) 5) "-outFile" "-out"))
          (jsexec (if (assoc :wrap params) ""
                    (concat " ; node " (org-babel-process-file-name tmp-out-file))
                    )))
     (with-temp-file tmp-src-file (insert (org-babel-expand-body:generic
                                           body params (org-babel-variable-assignments:typescript params))))
-    (let ((results (org-babel-eval (format "tsc %s -out %s %s %s"
+    (let ((results (org-babel-eval (format "tsc %s %s %s %s %s"
                                            cmdline
+                                           out-file-param-name
                                            (org-babel-process-file-name tmp-out-file)
                                            (org-babel-process-file-name tmp-src-file)
                                            jsexec)

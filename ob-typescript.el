@@ -44,6 +44,9 @@
 ;; optionally declare default header arguments for this language
 (defvar org-babel-default-header-args:typescript '((:cmdline . "--noImplicitAny")))
 
+(defvar org-babel-command:typescript "tsc"
+  "Command run by ob-typescript to launch tsc compiler")
+
 (defun org-babel-variable-assignments:typescript (params)
   "Return list of typescript statements assigning the block's variables."
   (mapcar (lambda (pair) (format "let %s=%s;"
@@ -77,7 +80,8 @@ called by `org-babel-execute-src-block'"
                    )))
     (with-temp-file tmp-src-file (insert (org-babel-expand-body:generic
                                           body params (org-babel-variable-assignments:typescript params))))
-    (let ((results (org-babel-eval (format "tsc %s %s %s %s %s"
+    (let ((results (org-babel-eval (format "%s %s %s %s %s %s"
+                                           org-babel-command:typescript
                                            cmdline
                                            out-file-param-name
                                            (org-babel-process-file-name tmp-out-file)

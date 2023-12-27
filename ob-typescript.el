@@ -62,7 +62,7 @@ specifying a var of the same value."
 
 (defun get-tsc-version ()
   "Get typescript compiler version"
-  (let ((ver-str (org-babel-eval "tsc --version" "")))
+  (let ((ver-str (org-babel-eval (concat org-babel-command:typescript " --version") "")))
     (string-match "[[:digit:]]+" ver-str)
     (string-to-number (match-string 0 ver-str))))
 

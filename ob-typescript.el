@@ -1,4 +1,4 @@
-;;; ob-typescript.el --- org-babel functions for typescript evaluation
+;;; ob-typescript.el --- org-babel functions for typescript evaluation  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2015 KURASHIKI Satoru
 

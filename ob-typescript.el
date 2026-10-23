@@ -1,4 +1,4 @@
-;;; ob-typescript.el --- org-babel functions for typescript evaluation
+;;; ob-typescript.el --- org-babel functions for typescript evaluation  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2015 KURASHIKI Satoru
 
@@ -60,40 +60,42 @@ specifying a var of the same value."
       (concat "[" (mapconcat #'org-babel-typescript-var-to-typescript var ", ") "]")
     (replace-regexp-in-string "\n" "\\\\n" (format "%S" var))))
 
-(defun get-tsc-version ()
-  "Get typescript compiler version"
-  (let ((ver-str (org-babel-eval (concat org-babel-command:typescript " --version") "")))
-    (string-match "[[:digit:]]+" ver-str)
-    (string-to-number (match-string 0 ver-str))))
-
 (defun org-babel-execute:typescript (body params)
-  "Execute a block of Typescript code with org-babel. This function is
-called by `org-babel-execute-src-block'"
+  "Execute a block of Typescript code with org-babel.
+This function is called by `org-babel-execute-src-block'.
+
+The block is compiled with `--outDir'/`--rootDir' instead of the
+`--outFile'/`--out' options, which were removed in TypeScript 7
+\(`--outFile' only ever worked together with AMD/System modules, and
+the native compiler no longer supports it).  `--outDir' works the same
+way in all TypeScript versions."
   (let* ((tmp-src-file (org-babel-temp-file "ts-src-" ".ts"))
-         (tmp-out-file (org-babel-temp-file "ts-src-" ".js"))
+         (tmp-dir (file-name-directory tmp-src-file))
+         ;; With --outDir equal to --rootDir, tsc emits <basename>.js
+         ;; right next to the temporary source file.
+         (tmp-out-file (concat (file-name-sans-extension tmp-src-file) ".js"))
          (cmdline (cdr (assoc :cmdline params)))
          (cmdline (if cmdline (concat " " cmdline) ""))
-         ;; since tsc v5, -out parameter is deprecated.
-         (out-file-param-name (if (>= (get-tsc-version) 5) "-outFile" "-out"))
-         (jsexec (if (assoc :wrap params) ""
-                   (concat " ; node " (org-babel-process-file-name tmp-out-file))
-                   )))
-    (with-temp-file tmp-src-file (insert (org-babel-expand-body:generic
-                                          body params (org-babel-variable-assignments:typescript params))))
-    (let ((results (org-babel-eval (format "%s %s %s %s %s %s"
-                                           org-babel-command:typescript
-                                           cmdline
-                                           out-file-param-name
-                                           (org-babel-process-file-name tmp-out-file)
-                                           (org-babel-process-file-name tmp-src-file)
-                                           jsexec)
-                                   ""))
-          (jstrans (with-temp-buffer
-                     (insert-file-contents tmp-out-file)
-                     (buffer-substring-no-properties (point-min) (point-max))
-                     )))
-      (if (eq jsexec "") jstrans results)
-      )))
+         (wrap (assoc :wrap params))
+         (jsexec (if wrap ""
+                   (concat " ; node " (org-babel-process-file-name tmp-out-file)))))
+    (with-temp-file tmp-src-file
+      (insert (org-babel-expand-body:generic
+               body params (org-babel-variable-assignments:typescript params))))
+    (let ((results (org-babel-eval
+                    (format "%s%s --rootDir %s --outDir %s %s%s"
+                            org-babel-command:typescript
+                            cmdline
+                            (org-babel-process-file-name tmp-dir)
+                            (org-babel-process-file-name tmp-dir)
+                            (org-babel-process-file-name tmp-src-file)
+                            jsexec)
+                    "")))
+      (if wrap
+          (with-temp-buffer
+            (insert-file-contents tmp-out-file)
+            (buffer-substring-no-properties (point-min) (point-max)))
+        results))))
 
 (provide 'ob-typescript)
 
